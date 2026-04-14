@@ -1,0 +1,6 @@
+crewai
+langchain-google-genai
+python-dotenv
+streamlit
+mcp
+fastmcp

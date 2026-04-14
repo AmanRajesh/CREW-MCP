@@ -1,0 +1,18 @@
+Philips Medical Device Technical Manual - Version 14.2
+
+---
+Symptom: blinking amber SPO2 sensor
+Diagnosis: The internal LED element or the photodiode in the SPO2 connector has degraded beyond the safe calibration threshold.
+Resolution: Replace the entire SPO2 sensor assembly.
+Part Number (SKU): SPO2-AMB
+Safety Precautions: 
+- CAUTION: Ensure the patient monitor is powered down completely before disconnecting the sensor. 
+- WARNING: Do not test the new sensor on yourself; use the standardized calibration phantom block.
+---
+Symptom: Error Code 404B
+Diagnosis: Display backlight inverter failure.
+Resolution: Replace inverter board.
+Part Number (SKU): 404B
+Safety Precautions:
+- DANGER: High voltage capacitors on the inverter board may retain charge. Wait 5 minutes after power down.
+---
