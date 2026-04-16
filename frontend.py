@@ -45,8 +45,18 @@ st.markdown("""
         border-left: 3px solid #4facfe;
         padding: 0.8rem;
         margin-bottom: 0.5rem;
-        font-size: 0.9em;
-        font-family: monospace;
+        font-size: 0.85em;
+        font-family: 'Inter', sans-serif;
+        border-radius: 0 8px 8px 0;
+    }
+    .agent-tag {
+        color: #4facfe;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75em;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+        display: block;
     }
     .stChatInputContainer > div {
         border-radius: 12px;
@@ -59,53 +69,55 @@ st.markdown("<h1 class='main-header'>Multi-Agent Systems for Error Resolution vi
 st.markdown("<h4 class='sub-header'>A2A Diagnostic, Logistics & Compliance Network via MCP</h4>", unsafe_allow_html=True)
 st.write("---")
 
-
-
 symptom = st.chat_input("Enter device symptom or error code (e.g., 'Error Code 404B')...")
 
 if symptom:
-    # Display user message in chat
     st.chat_message("user").write(symptom)
     
     with st.chat_message("assistant"):
-        # 2. Setup the visual status tracker
         with st.status("📡 Orchestrating CrewAI Workflow...", expanded=True) as status:
             st.write("Initializing fresh Agent context...")
             
-            comm_container = st.empty()
-            comm_history = []
+            # Placeholders for structured agent trace
+            trace_container = st.container()
             
-            # Trace callback to show thoughts in real-time
+            # Trace callback to attribute data to specific agents
             def step_callback(step):
-                text_to_display = ""
                 try:
-                    if hasattr(step, 'log'):
-                        text_to_display = f"💭 Agent: {step.log}"
-                    elif isinstance(step, str):
-                        text_to_display = f"💭 Update: {step}"
-                    
-                    if text_to_display:
-                        comm_history.append(text_to_display)
-                        html_content = "".join([f"<div class='comm-box'>{msg.replace('\n', '<br>')}</div>" for msg in comm_history])
-                        comm_container.markdown(html_content, unsafe_allow_html=True)
-                except: pass
+                    # Capture the Agent's name and their specific action/output
+                    if hasattr(step, 'agent'):
+                        agent_name = step.agent
+                        # Create a visual indicator of who is working
+                        with trace_container:
+                            if "Diagnostic" in agent_name:
+                                st.toast(f"🔍 Researcher is reading Manual.txt...", icon="📖")
+                            elif "Logistics" in agent_name:
+                                st.toast(f"📦 Logistics is querying SQL Database...", icon="💾")
+                            elif "Compliance" in agent_name:
+                                st.toast(f"⚖️ Compliance is verifying budget...", icon="🛡️")
+
+                            with st.expander(f"⚡ Live Action: {agent_name}", expanded=True):
+                    # This captures the actual logic the agent is performing
+                                st.markdown(f"**Agent is executing:** {step.tool if hasattr(step, 'tool') else 'Reasoning'}")
+                                st.caption(step.log if hasattr(step, 'log') else "Processing...")
+                except Exception as e:
+                    pass
 
             try:
-                # --- THE REFINEMENT ---
-                # 3. Create a BRAND NEW crew instance for this specific symptom
-                # This ensures no 'memory leaks' from previous failed runs
+                # 3. Create fresh crew instance
                 crew_instance = create_crew(symptom, step_callback)
                 
                 # 4. Run the orchestration
                 result = crew_instance.kickoff()
                 
                 # Update status UI
-                st.write("✅ Logic grounded in Manual.txt")
-                st.write("✅ Inventory fetched from SQL")
-                st.write("✅ Compliance verified")
+                st.write("✅ Diagnostic Researcher extracted SKU")
+                st.write("✅ Logistics Coordinator verified SQL Inventory")
+                st.write("✅ Tier 2 Compliance applied cost threshold")
+                
                 status.update(label="Workflow Complete!", state="complete", expanded=False)
                 
-                # 5. Display the final synthesized result
+                # 5. Final Output
                 final_plan = str(result.raw) if hasattr(result, 'raw') else str(result)
                 st.markdown(f"<div class='success-box'>{final_plan}</div>", unsafe_allow_html=True)
 

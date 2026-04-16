@@ -89,6 +89,20 @@ def create_crew(symptom: str, step_callback=None):
         expected_output="A complete structured Repair Action Plan containing actual data, not generic placeholders.",
         agent=compliance_agent
     )
+    reporting_task = Task(
+    description=(
+        "Create the final synthesized report. You MUST include the specific 'Repair Procedure' "
+        "found by the Diagnostic_Researcher. Explicitly label the work of each agent: "
+        "\n- 'Work of Diagnostic_Researcher': Error identification, SKU, and the STEP-BY-STEP REPAIR PROCEDURE from the manual."
+        "\n- 'Work of Logistics_Coordinator': Inventory levels and exact Unit Cost from SQL."
+        "\n- 'Work of Tier_2_Compliance': The $500 budget check and final authorization decision."
+    ),
+    expected_output=(
+        "A complete, attributed Repair Action Plan including the detailed repair steps, "
+        "costing, and compliance status, clearly showing which agent contributed which section."
+    ),
+    agent=compliance_agent
+)
 
     crew = Crew(
         agents=[diagnostic_agent, logistics_agent, compliance_agent],
