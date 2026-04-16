@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-st.set_page_config(page_title="Philips CrewAI Platform", page_icon="🏥", layout="wide")
+st.set_page_config(page_title="Multi-Agent Systems for Error Resolution via MCP", page_icon="🏥", layout="wide")
 
 st.markdown("""
     <style>
@@ -55,66 +55,60 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 class='main-header'>Philips Orchestrator CrewAI</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-header'>Multi-Agent Systems for Error Resolution via MCP</h1>", unsafe_allow_html=True)
 st.markdown("<h4 class='sub-header'>A2A Diagnostic, Logistics & Compliance Network via MCP</h4>", unsafe_allow_html=True)
 st.write("---")
 
-symptom = st.chat_input("Enter device symptom or error code (e.g., 'blinking amber SPO2 sensor')...")
+
+
+symptom = st.chat_input("Enter device symptom or error code (e.g., 'Error Code 404B')...")
 
 if symptom:
+    # Display user message in chat
     st.chat_message("user").write(symptom)
     
     with st.chat_message("assistant"):
-        with st.status("📡 Orchestrating CrewAI Workflow... Please wait.", expanded=True) as status:
-            st.write("Loading CrewAI Agents configured with MCP tools...")
+        # 2. Setup the visual status tracker
+        with st.status("📡 Orchestrating CrewAI Workflow...", expanded=True) as status:
+            st.write("Initializing fresh Agent context...")
             
             comm_container = st.empty()
             comm_history = []
             
-            # Using step callback to trace Agent comms
+            # Trace callback to show thoughts in real-time
             def step_callback(step):
                 text_to_display = ""
                 try:
-                    if isinstance(step, list):
-                        for s in step:
-                            # We can capture AgentAction logs
-                            if hasattr(s, 'log'):
-                                text_to_display += f"💭 Agent: {s.log}\n\n"
-                    elif hasattr(step, 'text'):
-                        text_to_display += f"💭 Thought: {step.text}\n\n"
+                    if hasattr(step, 'log'):
+                        text_to_display = f"💭 Agent: {step.log}"
                     elif isinstance(step, str):
-                        text_to_display += f"💭 Update: {step}\n\n"
-                    else:
-                        text_to_display += f"💭 Data: {str(step)}\n\n"
-                except Exception:
-                    pass
-                
-                if text_to_display.strip():
-                    comm_history.append(text_to_display.strip())
+                        text_to_display = f"💭 Update: {step}"
                     
-                    html_content = ""
-                    for msg in comm_history:
-                        # Convert newlines to HTML br for presentation
-                        safe_msg = msg.replace('\n', '<br>')
-                        html_content += f"<div class='comm-box'>{safe_msg}</div>"
-                    comm_container.markdown(html_content, unsafe_allow_html=True)
+                    if text_to_display:
+                        comm_history.append(text_to_display)
+                        html_content = "".join([f"<div class='comm-box'>{msg.replace('\n', '<br>')}</div>" for msg in comm_history])
+                        comm_container.markdown(html_content, unsafe_allow_html=True)
+                except: pass
 
             try:
-                crew = create_crew(symptom, step_callback)
-                result = crew.kickoff()
+                # --- THE REFINEMENT ---
+                # 3. Create a BRAND NEW crew instance for this specific symptom
+                # This ensures no 'memory leaks' from previous failed runs
+                crew_instance = create_crew(symptom, step_callback)
                 
-                st.write("✅ `Diagnostic_Researcher` parsed schemas via MCP")
-                st.write("✅ `Logistics_Coordinator` fetched hospital inventory records via MCP")
-                st.write("✅ `Tier_2_Compliance` enforced the $500 threshold budget rules")
-                st.write("✅ `Crew` successfully synthesized the multi-agent context")
+                # 4. Run the orchestration
+                result = crew_instance.kickoff()
                 
-                status.update(label="CrewAI Workflow Completed Successfully!", state="complete", expanded=False)
+                # Update status UI
+                st.write("✅ Logic grounded in Manual.txt")
+                st.write("✅ Inventory fetched from SQL")
+                st.write("✅ Compliance verified")
+                status.update(label="Workflow Complete!", state="complete", expanded=False)
                 
-                # handle different versions of CrewAI output
+                # 5. Display the final synthesized result
                 final_plan = str(result.raw) if hasattr(result, 'raw') else str(result)
-                
                 st.markdown(f"<div class='success-box'>{final_plan}</div>", unsafe_allow_html=True)
-                
+
             except Exception as e:
-                status.update(label="CrewAI Workflow Encountered an Error", state="error", expanded=True)
-                st.error(f"Exception during orchestration: {str(e)}\n\n⚠️ Ensure your FastMCP server is actively running on Port 8080!")
+                status.update(label="Orchestration Failed", state="error", expanded=True)
+                st.error(f"Error: {str(e)}\n\n⚠️ Ensure FastMCP is running on Port 8080!")

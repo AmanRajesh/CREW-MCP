@@ -1,12 +1,15 @@
 import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'hospital_inventory.db')
+# Use absolute path to ensure it hits the correct file regardless of where you run it
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'hospital_inventory.db')
 
 def setup_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
+    # Create table if it doesn't exist
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS inventory (
         part_number TEXT PRIMARY KEY,
@@ -15,21 +18,22 @@ def setup_db():
     )
     ''')
     
-    # Insert mock data
+    # Use REPLACE so that existing SKUs get updated
     mock_data = [
-        ('404B', 5, 120.00),      # Standard part
-        ('SPO2-AMB', 2, 650.00),  # High cost part > $500 threshold
-        ('MRI-MAG-01', 0, 12000.00) # Out of stock, extreme cost
+        ('404B', 5, 650.00),      # Updated to $650
+        ('SPO2-AMB', 2, 650.00),
+        ('MRI-MAG-01', 0, 12000.00)
     ]
     
     cursor.executemany('''
-    INSERT OR IGNORE INTO inventory (part_number, stock_level, unit_cost) 
+    INSERT OR REPLACE INTO inventory (part_number, stock_level, unit_cost) 
     VALUES (?, ?, ?)
     ''', mock_data)
     
-    conn.commit()
+    # CRITICAL: Changes are only saved to disk after commit()
+    conn.commit() 
     conn.close()
-    print(f"Database setup complete at {DB_PATH}")
+    print(f"Database successfully updated at {DB_PATH}")
 
 if __name__ == "__main__":
     setup_db()
